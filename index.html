@@ -115,7 +115,9 @@ function createHeart(){
     scoreBoard.textContent="Score: "+score;
     createClickConfetti(e.clientX,e.clientY);
     popSound.currentTime=0; popSound.play();
-    heart.remove(); hitArea.remove(); checkMessages(score); updateBackground(score);
+    heart.remove(); hitArea.remove(); 
+    checkMessages(score); 
+    updateBackground(score);
     if(score>=50 && !gameEnded) endGame();
   }
 
@@ -129,8 +131,14 @@ function checkMessages(score){
   if(score===5) msg="Gamer reflexes 💪🔥";
   if(score===10) msg="Careful 👀 don’t drop the heart… 😂";
   if(score===20) msg="Ok ok Thanos, leave some for the rest 💎";
+  if(score===25) msg="Hey… just so you know, someone made this just for you 💌"; // secret hint
   if(score===30) msg="You win 😤 remind me not to challenge again";
-  if(msg){ messageBox.textContent=msg; messageBox.style.display="block"; setTimeout(()=>{messageBox.style.display="none";},3000);}
+  if(msg){
+    messageBox.textContent=msg;
+    messageBox.style.display="block";
+    setTimeout(()=>{messageBox.style.display="none";},4000);
+    if(score===25) createConfetti(); // extra sparkle for secret hint
+  }
 }
 
 function updateBackground(score){
@@ -169,7 +177,7 @@ function adjustDifficulty(level){
   if(level===2) speed=800;
   if(level===3) speed=600;
   if(level===4) speed=500;
-  if(isMobile()) speed=Math.round(speed*1.5); // slower on mobile
+  if(isMobile()) speed=Math.round(speed*1.5);
   heartInterval=setInterval(createHeart,speed);
 }
 
