@@ -49,7 +49,7 @@ function createHeart(){
   heart.classList.add("heart");
   heart.innerText="❤️";
   
-  // big hitbox
+  // big hitbox positioning
   heart.style.left=Math.random()*(window.innerWidth-150)+"px";
   heart.style.top="-10vh";
   
@@ -76,17 +76,17 @@ function checkMessages(score){
     40:"Almost there! 🎉",
     50:"You did it! 🏆"
   };
-  
-  Object.keys(messageMap).forEach(k=>{
+
+  for(const k in messageMap){
     let key=parseInt(k);
-    if(score>=key && !messagesShown[key]){
-      messagesShown[key]=true;
-      messageBox.textContent=messageMap[key];
-      messageBox.style.display="block";
+    if(score >= key && !messagesShown[key]){
+      messagesShown[key] = true;
+      messageBox.textContent = messageMap[key];
+      messageBox.style.display = "block";
       if(key===25 || key===50) createConfetti();
       setTimeout(()=>{messageBox.style.display="none"},3000);
     }
-  });
+  }
 }
 
 function createConfetti(){
