@@ -59,7 +59,7 @@
 <div id="message"></div>
 <div id="finalMessage"></div>
 <button id="playAgain">Play Again 🔁</button>
-<audio id="popSound" src="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAIlYAAESsAAACABAAZGF0YQAAAAA="></audio>
+<audio id="popSound" src="https://www.soundjay.com/button/sounds/button-16.mp3"></audio>
 
 <script>
 const gameArea=document.getElementById("gameArea");
@@ -111,7 +111,11 @@ function createHeart(){
     lastClickTime=now;
     scoreBoard.textContent="Score: "+score;
     createClickConfetti(e.clientX,e.clientY);
-    popSound.currentTime=0; popSound.play();
+    
+    // Play pop sound safely
+    popSound.currentTime=0; 
+    popSound.play().catch(err=>console.log(err));
+
     heart.remove(); hitArea.remove(); 
     checkMessages(score); 
     updateBackground(score);
@@ -124,14 +128,25 @@ function createHeart(){
 }
 
 function checkMessages(score){
+  const messageMap = {
+    5: "Gamer reflexes 💪🔥",
+    10: "Careful 👀 don’t drop the heart… 😂",
+    20: "Ok ok Thanos, leave some for the rest 💎",
+    25: "Hey… just so you know, someone made this just for you 💌",
+    30: "You win 😤 remind me not to challenge again",
+    40: "Almost there! Keep it up! 🌟"
+  };
+
   let msg="";
-  
-  if(score >=5 && !messagesShown[5]) { msg="Gamer reflexes 💪🔥"; messagesShown[5]=true; }
-  if(score >=10 && !messagesShown[10]) { msg="Careful 👀 don’t drop the heart… 😂"; messagesShown[10]=true; }
-  if(score >=20 && !messagesShown[20]) { msg="Ok ok Thanos, leave some for the rest 💎"; messagesShown[20]=true; }
-  if(score >=25 && !messagesShown[25]) { msg="Hey… just so you know, someone made this just for you 💌"; messagesShown[25]=true; createConfetti(); }
-  if(score >=30 && !messagesShown[30]) { msg="You win 😤 remind me not to challenge again"; messagesShown[30]=true; }
-  if(score >=40 && !messagesShown[40]) { msg="Almost there! Keep it up! 🌟"; messagesShown[40]=true; }
+  for(const key in messageMap){
+    const k=parseInt(key);
+    if(score >= k && !messagesShown[k]){
+      msg=messageMap[k];
+      messagesShown[k]=true;
+      if(k===25) createConfetti();
+      break;
+    }
+  }
 
   if(msg){
     messageBox.textContent=msg;
@@ -158,13 +173,17 @@ function updateBackground(score){
   currentLevel=newLevel;
 }
 
-function showCombo(x,y){
-  const combo=document.createElement("div");
-  combo.classList.add("combo");
-  combo.innerText="+2 COMBO!";
-  combo.style.left=x+"px"; combo.style.top=y+"px";
-  document.body.appendChild(combo);
-  setTimeout(()=>combo.remove(),1000);
+function createClickConfetti(x,y){
+  for(let i=0;i<10;i++){
+    const conf=document.createElement("div");
+    conf.classList.add("confetti");
+    conf.style.width=conf.style.height=(3+Math.random()*5)+"vw";
+    conf.style.background=`hsl(${Math.random()*360},100%,70%)`;
+    conf.style.left=x+"px"; conf.style.top=y+"px";
+    conf.style.animationDuration=(0.8+Math.random()*0.7)+"s";
+    document.body.appendChild(conf);
+    setTimeout(()=>conf.remove(),1000);
+  }
 }
 
 function createConfetti(){
@@ -176,19 +195,6 @@ function createConfetti(){
     conf.style.animationDuration=(2+Math.random()*2)+"s";
     document.body.appendChild(conf);
     setTimeout(()=>conf.remove(),3000);
-  }
-}
-
-function createClickConfetti(x,y){
-  for(let i=0;i<10;i++){
-    const conf=document.createElement("div");
-    conf.classList.add("confetti");
-    conf.style.width=conf.style.height=(3+Math.random()*5)+"vw";
-    conf.style.background=`hsl(${Math.random()*360},100%,70%)`;
-    conf.style.left=x+"px"; conf.style.top=y+"px";
-    conf.style.animationDuration=(0.8+Math.random()*0.7)+"s";
-    document.body.appendChild(conf);
-    setTimeout(()=>conf.remove(),1000);
   }
 }
 
@@ -209,11 +215,18 @@ function resetGame(){
   finalMessage.style.display="none";
   playAgainBtn.style.display="none";
   document.body.style.background="linear-gradient(270deg,#ffdde1,#ee9ca7)";
-  heartInterval=setInterval(createHeart,isMobile()?1500:1000);
+  startHearts();
+}
+
+function startHearts(){
+  clearInterval(heartInterval);
+  const interval = isMobile() ? 1200 : 1000; // comfortable spawn speed
+  heartInterval = setInterval(createHeart, interval);
 }
 
 playAgainBtn.addEventListener("click", resetGame);
-heartInterval=setInterval(createHeart,isMobile()?1500:1000);
+startHearts();
 </script>
 </body>
+</html>
 </html>
