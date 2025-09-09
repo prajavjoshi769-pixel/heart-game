@@ -33,13 +33,11 @@
   @keyframes fall { from { top: -10vh; } to { top: 100vh; } }
 
   #scoreBoard { position: absolute; top: 2vh; left: 2vw; font-size: 4vw; color: white; text-shadow: 1px 1px 2px black; }
-  #message, #levelUp, .combo, #finalMessage { 
+  #message, .combo, #finalMessage { 
     position: absolute; left: 50%; transform: translateX(-50%); 
     font-size: 6vw; background: rgba(255,255,255,0.8); padding: 2vh 4vw; 
     border-radius: 3vw; display: none; text-align: center; color: #333;
   }
-  #levelUp { top: 45%; font-weight: bold; color: #fff; background: rgba(0,0,0,0.5); animation: pop 1s ease forwards; }
-  @keyframes pop { 0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; } 50% { transform: translate(-50%, -50%) scale(1.2); opacity:1; } 100% { transform: translate(-50%, -50%) scale(1); opacity:0; } }
 
   .combo { font-size: 4vw; color: yellow; font-weight: bold; pointer-events: none; animation: comboAnim 1s ease forwards; }
   @keyframes comboAnim { 0% { opacity:1; transform: translate(-50%, -50%) scale(1);} 100% { opacity:0; transform: translate(-50%, -80%) scale(1.5);} }
@@ -59,7 +57,6 @@
 <div id="gameArea"></div>
 <div id="scoreBoard">Score: 0</div>
 <div id="message"></div>
-<div id="levelUp">LEVEL UP!</div>
 <div id="finalMessage"></div>
 <button id="playAgain">Play Again 🔁</button>
 <audio id="popSound" src="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAIlYAAESsAAACABAAZGF0YQAAAAA="></audio>
@@ -68,12 +65,12 @@
 const gameArea=document.getElementById("gameArea");
 const scoreBoard=document.getElementById("scoreBoard");
 const messageBox=document.getElementById("message");
-const levelUpBox=document.getElementById("levelUp");
 const finalMessage=document.getElementById("finalMessage");
 const playAgainBtn=document.getElementById("playAgain");
 const popSound=document.getElementById("popSound");
 
 let score=0,currentLevel=1,heartInterval=null,lastClickTime=0,gameEnded=false;
+const messagesShown = {5:false,10:false,20:false,25:false,30:false,40:false};
 const compliments=["🌸 You’re Awesome!","💫 Unstoppable Energy!","🔥 Heart Catching Pro!","✨ Queen of Hearts!","🌟 Game Master Extraordinaire!"];
 
 const heartTypes=[
@@ -128,16 +125,18 @@ function createHeart(){
 
 function checkMessages(score){
   let msg="";
-  if(score===5) msg="Gamer reflexes 💪🔥";
-  if(score===10) msg="Careful 👀 don’t drop the heart… 😂";
-  if(score===20) msg="Ok ok Thanos, leave some for the rest 💎";
-  if(score===25) msg="Hey… just so you know, someone made this just for you 💌"; // secret hint
-  if(score===30) msg="You win 😤 remind me not to challenge again";
+  
+  if(score >=5 && !messagesShown[5]) { msg="Gamer reflexes 💪🔥"; messagesShown[5]=true; }
+  if(score >=10 && !messagesShown[10]) { msg="Careful 👀 don’t drop the heart… 😂"; messagesShown[10]=true; }
+  if(score >=20 && !messagesShown[20]) { msg="Ok ok Thanos, leave some for the rest 💎"; messagesShown[20]=true; }
+  if(score >=25 && !messagesShown[25]) { msg="Hey… just so you know, someone made this just for you 💌"; messagesShown[25]=true; createConfetti(); }
+  if(score >=30 && !messagesShown[30]) { msg="You win 😤 remind me not to challenge again"; messagesShown[30]=true; }
+  if(score >=40 && !messagesShown[40]) { msg="Almost there! Keep it up! 🌟"; messagesShown[40]=true; }
+
   if(msg){
     messageBox.textContent=msg;
     messageBox.style.display="block";
     setTimeout(()=>{messageBox.style.display="none";},4000);
-    if(score===25) createConfetti(); // extra sparkle for secret hint
   }
 }
 
@@ -156,29 +155,7 @@ function updateBackground(score){
   document.body.style.backgroundSize="400% 400%";
   document.body.style.animation="gradientMove 15s ease infinite";
 
-  if(newLevel>currentLevel){ showLevelUp(newLevel); adjustDifficulty(newLevel); }
   currentLevel=newLevel;
-}
-
-function showLevelUp(level){
-  let levelMsg="LEVEL UP!";
-  if(level===2) levelMsg="🌟 Level 2! Keep going!";
-  if(level===3) levelMsg="🔥 Level 3! Amazing!";
-  if(level===4) levelMsg="💚 Level 4! You’re unstoppable!";
-  levelUpBox.textContent=levelMsg;
-  levelUpBox.style.display="block";
-  levelUpBox.style.animation="pop 1s ease forwards";
-  setTimeout(()=>{levelUpBox.style.display="none";},1500);
-}
-
-function adjustDifficulty(level){
-  clearInterval(heartInterval);
-  let speed=1000;
-  if(level===2) speed=800;
-  if(level===3) speed=600;
-  if(level===4) speed=500;
-  if(isMobile()) speed=Math.round(speed*1.5);
-  heartInterval=setInterval(createHeart,speed);
 }
 
 function showCombo(x,y){
@@ -227,6 +204,7 @@ function endGame(){
 
 function resetGame(){
   score=0; currentLevel=1; gameEnded=false; lastClickTime=0;
+  for(let key in messagesShown) messagesShown[key]=false;
   scoreBoard.textContent="Score: 0";
   finalMessage.style.display="none";
   playAgainBtn.style.display="none";
