@@ -3,37 +3,17 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Catch the Hearts 💖</title>
+<title>Catch the Heart 💖</title>
 <style>
-body {
-  margin:0; overflow:hidden; font-family:Arial,sans-serif;
-  background:linear-gradient(270deg,#ffdde1,#ee9ca7);
-  background-size:400% 400%;
-  animation:gradientMove 15s ease infinite;
-  touch-action:none;
-  transition: background 1s ease;
-}
-@keyframes gradientMove {
-  0%{background-position:0% 50%}
-  50%{background-position:100% 50%}
-  100%{background-position:0% 50%}
-}
-#gameArea{position:relative;width:100vw;height:100vh;overflow:hidden;}
-.heart{
-  position:absolute;font-size:10vw;cursor:pointer;
-  animation:fall linear;
-  user-select:none; padding:2vw; touch-action:manipulation;
-}
-@keyframes fall { from{top:-10vh} to{top:100vh} }
-
+body{margin:0;overflow:hidden;font-family:Arial,sans-serif;background:#ffdde1;transition:background 1s;}
+#gameArea{position:relative;width:100vw;height:100vh;}
+.heart{position:absolute;font-size:15vw;cursor:pointer;user-select:none;animation:fall 4s linear;touch-action:manipulation;
+width:18vw;height:18vw;display:flex;align-items:center;justify-content:center;}
+@keyframes fall{0%{top:-10vh}100%{top:100vh}}
 #scoreBoard{position:absolute;top:2vh;left:2vw;font-size:4vw;color:white;text-shadow:1px 1px 2px black;}
-#message, #finalMessage{position:absolute;left:50%;transform:translateX(-50%);
-font-size:6vw;background:rgba(255,255,255,0.8);padding:2vh 4vw;border-radius:3vw;display:none;text-align:center;color:#333;}
-#playAgain{display:none;position:absolute;top:55%;left:50%;transform:translateX(-50%);
-padding:3vw 6vw;font-size:5vw;border:none;border-radius:3vw;background:#ff4081;color:white;
-cursor:pointer;box-shadow:0 4px 10px rgba(0,0,0,0.2);animation:glow 1.5s infinite;}
+#message,#finalMessage{position:absolute;left:50%;transform:translateX(-50%);font-size:6vw;background:rgba(255,255,255,0.8);padding:2vh 4vw;border-radius:3vw;display:none;text-align:center;color:#333;}
+#playAgain{display:none;position:absolute;top:55%;left:50%;transform:translateX(-50%);padding:3vw 6vw;font-size:5vw;border:none;border-radius:3vw;background:#ff4081;color:white;cursor:pointer;}
 #playAgain:hover{background:#e91e63;}
-@keyframes glow{0%{box-shadow:0 0 5px #ff4081}50%{box-shadow:0 0 20px #ff4081}100%{box-shadow:0 0 5px #ff4081}}
 .confetti{position:absolute;width:2vw;height:2vw;border-radius:50%;opacity:0.9;pointer-events:none;animation:fallConfetti 3s linear forwards;}
 @keyframes fallConfetti{0%{transform:translateY(0) rotate(0deg)}100%{transform:translateY(100vh) rotate(360deg);opacity:0}}
 </style>
@@ -54,94 +34,59 @@ const finalMessage=document.getElementById("finalMessage");
 const playAgainBtn=document.getElementById("playAgain");
 const popSound=document.getElementById("popSound");
 
-let score=0,currentLevel=1,heartInterval=null,lastClickTime=0,gameEnded=false;
-const messagesShown = {5:false,10:false,20:false,25:false,30:false,40:false};
-const compliments=["🌸 You’re Awesome!","💫 Unstoppable Energy!","🔥 Heart Catching Pro!","✨ Queen of Hearts!","🌟 Game Master Extraordinaire!"];
+let score=0,heartInterval=null,gameEnded=false;
+const messagesShown={10:false,20:false,25:false,30:false,40:false,50:false};
 
-const heartTypes=[
-  {emoji:"❤️", points:1},
-  {emoji:"💜", points:2},
-  {emoji:"💛", points:3},
-  {emoji:"💙", points:2}
-];
+function isMobile(){return /Mobi|Android/i.test(navigator.userAgent);}
 
+// unlock audio on first click
 let audioUnlocked=false;
 document.body.addEventListener("click",()=>{if(!audioUnlocked){popSound.play().catch(()=>{});audioUnlocked=true;}},{once:true});
-
-function isMobile(){ return /Mobi|Android/i.test(navigator.userAgent); }
 
 function createHeart(){
   if(gameEnded) return;
   const heart=document.createElement("div");
   heart.classList.add("heart");
-  const type=heartTypes[Math.floor(Math.random()*heartTypes.length)];
-  heart.innerText=type.emoji;
-  heart.dataset.points=type.points;
-  heart.style.left=Math.random()*(window.innerWidth-80)+"px";
-  heart.style.animationDuration=(2+Math.random()*3)+"s";
+  heart.innerText="❤️";
+  
+  // big hitbox
+  heart.style.left=Math.random()*(window.innerWidth-150)+"px";
+  heart.style.top="-10vh";
+  
   gameArea.appendChild(heart);
 
-  function handleClick(e){
-    const now=Date.now();
-    let points=parseInt(heart.dataset.points);
-    if(now-lastClickTime<1000) points+=2;
-    score+=points;
-    lastClickTime=now;
+  heart.addEventListener("click",(e)=>{
+    score++;
     scoreBoard.textContent="Score: "+score;
-    createClickConfetti(e.clientX,e.clientY);
-    popSound.currentTime=0; popSound.play().catch(()=>{});
-    heart.remove(); checkMessages(score); updateBackground(score);
+    popSound.currentTime=0;popSound.play().catch(()=>{});
+    heart.remove();
+    checkMessages(score);
     if(score>=50 && !gameEnded) endGame();
-  }
+  });
 
-  heart.addEventListener("click", handleClick);
-  setTimeout(()=>{heart.remove()},5000);
+  setTimeout(()=>{heart.remove()},4000);
 }
 
 function checkMessages(score){
-  const messageMap={5:"Gamer reflexes 💪🔥",10:"Careful 👀 don’t drop the heart… 😂",20:"Ok ok Thanos, leave some for the rest 💎",
-  25:"Hey… just so you know, someone made this just for you 💌",30:"You win 😤 remind me not to challenge again",40:"Almost there! Keep it up! 🌟"};
-
+  const messageMap={
+    10:"Keep going! 😊",
+    20:"Nice! 🌟",
+    25:"Hey… just so you know, someone made this just for you 💌",
+    30:"Great job! 💖",
+    40:"Almost there! 🎉",
+    50:"You did it! 🏆"
+  };
+  
   Object.keys(messageMap).forEach(k=>{
     let key=parseInt(k);
     if(score>=key && !messagesShown[key]){
       messagesShown[key]=true;
-      setTimeout(()=>{
-        messageBox.textContent=messageMap[key];
-        messageBox.style.display="block";
-        if(key===25) createConfetti();
-        setTimeout(()=>{messageBox.style.display="none"},4000);
-      },500);
+      messageBox.textContent=messageMap[key];
+      messageBox.style.display="block";
+      if(key===25 || key===50) createConfetti();
+      setTimeout(()=>{messageBox.style.display="none"},3000);
     }
   });
-}
-
-function updateBackground(score){
-  let newLevel=currentLevel;
-  if(score<10) newLevel=1; else if(score<20) newLevel=2;
-  else if(score<30) newLevel=3; else newLevel=4;
-
-  if(newLevel===1) document.body.style.background="linear-gradient(270deg,#ffdde1,#ee9ca7)";
-  else if(newLevel===2) document.body.style.background="linear-gradient(270deg,#f6d365,#fda085)";
-  else if(newLevel===3) document.body.style.background="linear-gradient(270deg,#a18cd1,#fbc2eb)";
-  else document.body.style.background="linear-gradient(270deg,#43cea2,#185a9d)";
-
-  document.body.style.backgroundSize="400% 400%";
-  document.body.style.animation="gradientMove 15s ease infinite";
-  currentLevel=newLevel;
-}
-
-function createClickConfetti(x,y){
-  for(let i=0;i<10;i++){
-    const conf=document.createElement("div");
-    conf.classList.add("confetti");
-    conf.style.width=conf.style.height=(3+Math.random()*5)+"vw";
-    conf.style.background=`hsl(${Math.random()*360},100%,70%)`;
-    conf.style.left=x+"px"; conf.style.top=y+"px";
-    conf.style.animationDuration=(0.8+Math.random()*0.7)+"s";
-    document.body.appendChild(conf);
-    setTimeout(()=>conf.remove(),1000);
-  }
 }
 
 function createConfetti(){
@@ -150,7 +95,6 @@ function createConfetti(){
     conf.classList.add("confetti");
     conf.style.background=`hsl(${Math.random()*360},100%,60%)`;
     conf.style.left=Math.random()*window.innerWidth+"px";
-    conf.style.animationDuration=(2+Math.random()*2)+"s";
     document.body.appendChild(conf);
     setTimeout(()=>conf.remove(),3000);
   }
@@ -159,30 +103,28 @@ function createConfetti(){
 function endGame(){
   gameEnded=true;
   clearInterval(heartInterval);
-  const randomMsg=compliments[Math.floor(Math.random()*compliments.length)];
-  finalMessage.textContent=randomMsg;
+  finalMessage.textContent="🎉 You Won! 🎉";
   finalMessage.style.display="block";
   playAgainBtn.style.display="block";
   createConfetti();
 }
 
 function resetGame(){
-  score=0; currentLevel=1; gameEnded=false; lastClickTime=0;
+  score=0; gameEnded=false;
   for(let key in messagesShown) messagesShown[key]=false;
   scoreBoard.textContent="Score: 0";
   finalMessage.style.display="none";
   playAgainBtn.style.display="none";
-  document.body.style.background="linear-gradient(270deg,#ffdde1,#ee9ca7)";
   startHearts();
 }
 
 function startHearts(){
   clearInterval(heartInterval);
-  const interval = isMobile()?1200:1000;
-  heartInterval = setInterval(createHeart, interval);
+  const interval=isMobile()?1200:1000;
+  heartInterval=setInterval(createHeart,interval);
 }
 
-playAgainBtn.addEventListener("click", resetGame);
+playAgainBtn.addEventListener("click",resetGame);
 startHearts();
 </script>
 </body>
