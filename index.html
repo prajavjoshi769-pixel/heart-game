@@ -3,131 +3,73 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Catch the Heart 💖</title>
+<title>Heart Magic Game</title>
 <style>
-body{margin:0;overflow:hidden;font-family:Arial,sans-serif;background:#ffdde1;transition:background 1s;}
-#gameArea{position:relative;width:100vw;height:100vh;}
-.heart{position:absolute;font-size:15vw;cursor:pointer;user-select:none;animation:fall 4s linear;touch-action:manipulation;
-width:18vw;height:18vw;display:flex;align-items:center;justify-content:center;}
-@keyframes fall{0%{top:-10vh}100%{top:100vh}}
-#scoreBoard{position:absolute;top:2vh;left:2vw;font-size:4vw;color:white;text-shadow:1px 1px 2px black;}
-#message,#finalMessage{position:absolute;left:50%;transform:translateX(-50%);font-size:6vw;background:rgba(255,255,255,0.8);padding:2vh 4vw;border-radius:3vw;display:none;text-align:center;color:#333;}
-#playAgain{display:none;position:absolute;top:55%;left:50%;transform:translateX(-50%);padding:3vw 6vw;font-size:5vw;border:none;border-radius:3vw;background:#ff4081;color:white;cursor:pointer;}
-#playAgain:hover{background:#e91e63;}
-.confetti{position:absolute;width:2vw;height:2vw;border-radius:50%;opacity:0.9;pointer-events:none;animation:fallConfetti 3s linear forwards;}
-@keyframes fallConfetti{0%{transform:translateY(0) rotate(0deg)}100%{transform:translateY(100vh) rotate(360deg);opacity:0}}
+  body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background: linear-gradient(to bottom, #ff9a9e, #fad0c4);
+    font-family: Arial, sans-serif;
+    overflow: hidden;
+    margin: 0;
+  }
+  #heart-container {
+    position: relative;
+  }
+  .heart {
+    width: 100px;
+    height: 100px;
+    background: url('https://i.postimg.cc/7L1WJX6b/heart.png') no-repeat center/contain;
+    cursor: pointer;
+  }
+  #message {
+    position: absolute;
+    top: -60px;
+    width: 100%;
+    text-align: center;
+    font-size: 20px;
+    font-weight: bold;
+    color: white;
+    text-shadow: 2px 2px 5px #000;
+  }
 </style>
 </head>
 <body>
-<div id="gameArea"></div>
-<div id="scoreBoard">Score: 0</div>
-<div id="message"></div>
-<div id="finalMessage"></div>
-<button id="playAgain">Play Again 🔁</button>
-<audio id="popSound" src="https://www.soundjay.com/button/sounds/button-16.mp3"></audio>
+
+<div id="heart-container">
+  <div class="heart" id="heart"></div>
+  <div id="message"></div>
+</div>
+
+<audio id="pop-sound" src="https://www.soundjay.com/button/sounds/button-16.mp3"></audio>
 
 <script>
-const gameArea=document.getElementById("gameArea");
-const scoreBoard=document.getElementById("scoreBoard");
-const messageBox=document.getElementById("message");
-const finalMessage=document.getElementById("finalMessage");
-const playAgainBtn=document.getElementById("playAgain");
-const popSound=document.getElementById("popSound");
+  let count = 0;
+  const heart = document.getElementById('heart');
+  const message = document.getElementById('message');
+  const popSound = document.getElementById('pop-sound');
 
-let score=0,heartInterval=null,gameEnded=false;
-const messagesShown={10:false,20:false,25:false,30:false,40:false,50:false};
-
-function isMobile(){return /Mobi|Android/i.test(navigator.userAgent);}
-
-// unlock audio on first click
-let audioUnlocked=false;
-document.body.addEventListener("click",()=>{if(!audioUnlocked){popSound.play().catch(()=>{});audioUnlocked=true;}},{once:true});
-
-function createHeart(){
-  if(gameEnded) return;
-  const heart=document.createElement("div");
-  heart.classList.add("heart");
-  heart.innerText="❤️";
-  
-  // big hitbox positioning
-  heart.style.left=Math.random()*(window.innerWidth-150)+"px";
-  heart.style.top="-10vh";
-  
-  gameArea.appendChild(heart);
-
-  heart.addEventListener("click",(e)=>{
-    score++;
-    scoreBoard.textContent="Score: "+score;
-    popSound.currentTime=0;popSound.play().catch(()=>{});
-    heart.remove();
-    checkMessages(score);
-    if(score>=50 && !gameEnded) endGame();
-  });
-
-  setTimeout(()=>{heart.remove()},4000);
-}
-
-function checkMessages(score){
-  const messageMap={
-    10:"Keep going! 😊",
-    20:"Nice! 🌟",
-    25:"Hey… just so you know, someone made this just for you 💌",
-    30:"Great job! 💖",
-    40:"Almost there! 🎉",
-    50:"You did it! 🏆"
+  const messages = {
+    10: "🎉 Wow, 10 clicks! Keep going!",
+    25: "💖 Amazing! 25 clicks!",
+    50: "🌟 Incredible! 50 clicks! You did it!"
   };
 
-  for(const k in messageMap){
-    let key=parseInt(k);
-    if(score >= key && !messagesShown[key]){
-      messagesShown[key] = true;
-      messageBox.textContent = messageMap[key];
-      messageBox.style.display = "block";
-      if(key===25 || key===50) createConfetti();
-      setTimeout(()=>{messageBox.style.display="none"},3000);
+  heart.addEventListener('click', () => {
+    count++;
+    popSound.currentTime = 0;
+    popSound.play();
+
+    if(messages[count]) {
+      message.textContent = messages[count];
+      setTimeout(() => {
+        message.textContent = '';
+      }, 2500);
     }
-  }
-}
-
-function createConfetti(){
-  for(let i=0;i<50;i++){
-    const conf=document.createElement("div");
-    conf.classList.add("confetti");
-    conf.style.background=`hsl(${Math.random()*360},100%,60%)`;
-    conf.style.left=Math.random()*window.innerWidth+"px";
-    document.body.appendChild(conf);
-    setTimeout(()=>conf.remove(),3000);
-  }
-}
-
-function endGame(){
-  gameEnded=true;
-  clearInterval(heartInterval);
-  finalMessage.textContent="🎉 You Won! 🎉";
-  finalMessage.style.display="block";
-  playAgainBtn.style.display="block";
-  createConfetti();
-}
-
-function resetGame(){
-  score=0; gameEnded=false;
-  for(let key in messagesShown) messagesShown[key]=false;
-  scoreBoard.textContent="Score: 0";
-  finalMessage.style.display="none";
-  playAgainBtn.style.display="none";
-  startHearts();
-}
-
-function startHearts(){
-  clearInterval(heartInterval);
-  const interval=isMobile()?1200:1000;
-  heartInterval=setInterval(createHeart,interval);
-}
-
-playAgainBtn.addEventListener("click",resetGame);
-startHearts();
+  });
 </script>
+
 </body>
 </html>
-
-
